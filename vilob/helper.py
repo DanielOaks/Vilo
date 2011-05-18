@@ -43,8 +43,5 @@ def askok(prompt, blank=''):
             elif blank == False:
                 return False
 
-def downloadfile(url, localfile=None):
-    if localfile:
-        local_name = localfile
-    else:
-        local_name = ufl.split('/')[-1]
+def printprogressbar(progress, progressboxes=10):
+    print('\r [', '#'*int((progress/100)*progressboxes) + ' '*(progressboxes-int((progress/100)*progressboxes)), '] %d%%' % progress, end='')

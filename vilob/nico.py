@@ -9,7 +9,7 @@ import http.cookiejar
 import urllib.request, urllib.parse
 import chardet
 from time import time
-from helper import askok
+from .helper import askok, printprogressbar
 from getpass import getpass
 
 class Connection:
@@ -85,10 +85,25 @@ class Connection:
                 print('downloading video [%s]' % video)
                 if True:
                     full_open = urllib.request.urlopen(download_results['url'])
-                    full_open_data = full_open.read() #work out some progress bar thing for this
                     local_file = open(video+'.'+video_type, 'wb')
-                    local_file.write(full_open_data)
-                    local_file.close()
+                    
+                    try:
+                        block_size = 1024*8
+                        block_num = 0
+                        read = 0
+                        size = int(full_open.info()['Content-Length'])
+                        while 1:
+                            block = full_open.read(block_size)
+                            if not block:
+                                break
+                            read += len(block)
+                            local_file.write(block)
+                            block_num += 1
+                            printprogressbar((read/size)*100)
+                    finally:
+                        print('')
+                        local_file.close()
+                        full_open.close()
                 else:
                     filename, headers = urllib.request.urlretrieve(download_results['url'], video+'__.'+video_type)
                 print('video [%s] downloaded' % video)

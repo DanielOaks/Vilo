@@ -11,4 +11,4 @@ connection = Connection()
 settings_path = 'settings.json'
 settings = connection.parse_config_file(settings_path, update_settings=True)
 
-connection.download_video('sm14481824')
+connection.download_video('sm14473306')
