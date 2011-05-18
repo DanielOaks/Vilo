@@ -26,8 +26,4 @@ while 1:
         print('\nVilo Exited')
         break
     
-    if 'sm' in media_code:
-        downloaded = connection.download_douga(media_code)
-    
-    elif 'im' in media_code:
-        downloaded = connection.download_seiga(media_code)
+    connection.download_media(media_code)

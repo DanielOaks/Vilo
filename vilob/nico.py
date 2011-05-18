@@ -8,6 +8,7 @@ import json
 import http.cookiejar
 import urllib.request, urllib.parse
 import chardet
+import os
 from time import time
 from .helper import askok, printprogressbar
 from getpass import getpass
@@ -37,6 +38,22 @@ class Connection:
         login_request = urllib.request.Request(login_url, login_params)
         login_open = urllib.request.urlopen(login_request)
         login_open.close()
+    
+    def download_media(self, media):
+        try:
+            os.makedirs('media')
+        except OSError:
+            if os.path.isdir('media'):
+                pass
+            else:
+                raise
+        
+        outcome = False
+        if 'sm' in media:
+            outcome = self.download_douga(media)
+        elif 'im' in media:
+            outcome = self.download_seiga(media)
+        return outcome
     
     def download_douga(self, video):
         if len(self.cj) is 0:
@@ -85,7 +102,7 @@ class Connection:
                 print(' video [%s] downloading as %s' % (video, video_type))
                 if True:
                     full_open = urllib.request.urlopen(download_results['url'])
-                    local_file = open(video+'.'+video_type, 'wb')
+                    local_file = open('media/'+video+'.'+video_type, 'wb')
                     
                     try:
                         block_size = 1024*8
@@ -130,7 +147,7 @@ class Connection:
         print(' image [%s] downloading' % image)
         
         try:
-            local_file = open(image+'.jpg', 'wb')
+            local_file = open('media/'+image+'.jpg', 'wb')
             
             try:
                 block_size = 1024*8
@@ -159,7 +176,6 @@ class Connection:
         except urllib.error.URLError as e:
             print(' URL Error:', e.code, ':', download_url)
             return False
-        
     
     
     def parse_config_file(self, settings_path, update_settings=False):
