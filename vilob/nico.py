@@ -5,6 +5,10 @@ Copyright 2011 Daniel Oakley <danneh@danneh.net>
 """
 
 import json
+import http.cookiejar
+import urllib.request, urllib.parse
+import chardet
+from time import time
 from helper import askok
 from getpass import getpass
 
@@ -13,17 +17,92 @@ class Connection:
         interacting with it. """
     
     def __init__(self):
-        pass
+        self.email = ''
+        self.password = ''
+        
+        self.cj = http.cookiejar.CookieJar()
+        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cj))
+        urllib.request.install_opener(self.opener)
     
-    
-    def login(self, email, password):
-        pass
+    def login(self, email, password, video=None):
+        login_url = 'https://secure.nicovideo.jp/secure/login?site=niconico'
+        login_values = {
+            'mail' : email,
+            'password' : password,
+        }
+        if video:
+            login_values['next_url'] = '/watch/' + str(video)
+        login_params = urllib.parse.urlencode(login_values)
+        login_params = login_params.encode('utf-8')
+        login_request = urllib.request.Request(login_url, login_params)
+        login_open = urllib.request.urlopen(login_request)
+        login_open.close()
     
     def download_video(self, video):
-        pass
+        if len(self.cj) is 0:
+            self.login(self.email, self.password, video)
+        
+        download_values = {
+            #'ts' : str(time()).split('.')[0],
+            'as3' : '1',
+            #'lo' : '0',
+        }
+        download_params = urllib.parse.urlencode(download_values)
+        download_params = '?' + str(download_params)
+        download_url = 'http://www.nicovideo.jp/api/getflv/' + video + download_params
+        download_open = urllib.request.urlopen(download_url)
+        
+        download_results = {}
+        download_success = False
+        for pair in download_open.read().decode('utf-8').split('&'):
+            title, value = pair.split('=')
+            download_results[title] = urllib.parse.unquote(value)
+            if title == 'url':
+                download_success = True
+        #for title in download_results:
+        #    print(' ', title, '=', download_results[title])
+        download_open.close()
+        
+        if download_success:
+            # set download cookie
+            urllib.request.urlopen('http://www.nicovideo.jp/watch/'+video)
+            
+            video_type = ''
+            try:
+                if False:
+                    thread_url = 'http://www.nicovideo.jp/api/getthreadkey?thread=' + download_results['thread_id']
+                    thread_url += '&ts=' + str(time()).split('.')[0]
+                    print(thread_url)
+                    thread_open = urllib.request.urlopen(thread_url)
+                    print(thread_open.read().decode('utf-8'))
+                
+                if '?s=' in download_results['url']:
+                    video_type = 'swf'
+                elif '?m=' in download_results['url']:
+                    video_type = 'mp4'
+                else:
+                    video_type = 'flv'
+                print('downloading video [%s]' % video)
+                if True:
+                    full_open = urllib.request.urlopen(download_results['url'])
+                    full_open_data = full_open.read() #work out some progress bar thing for this
+                    local_file = open(video+'.'+video_type, 'wb')
+                    local_file.write(full_open_data)
+                    local_file.close()
+                else:
+                    filename, headers = urllib.request.urlretrieve(download_results['url'], video+'__.'+video_type)
+                print('video [%s] downloaded' % video)
+            except urllib.error.HTTPError as e:
+                print('HTTP Error', e.code, ':', download_results['url'])
+                return
+            except urllib.error.URLError as e:
+                print('URL Error:', e.code, ':', download_results['url'])
+                return
+        else:
+            print('video [%s] cound not be downloaded' % video)
     
     
-    def parse_config_file(self, settings_path):
+    def parse_config_file(self, settings_path, update_settings=False):
         #>> deal with config file
         settings = None
         try:
@@ -33,14 +112,15 @@ class Connection:
         except:
             settings = None
         
-        settings = self.prompt_settings(settings)
-        
-        try:
-            settings_file = open(settings_path, 'w')
-            settings_file.write(json.dumps(settings, sort_keys=True, indent=4))
-            settings_file.close()
-        except:
-            print('Failed to save configuration file:', settings_path)
+        if update_settings:
+            settings = self.prompt_settings(settings)
+            
+            try:
+                settings_file = open(settings_path, 'w')
+                settings_file.write(json.dumps(settings, sort_keys=True, indent=4))
+                settings_file.close()
+            except:
+                print('Failed to save configuration file:', settings_path)
         
         #>> load settings
         self.load_settings(settings)
@@ -50,7 +130,7 @@ class Connection:
         email = ''
         try:
             email = settings['email']
-            if askok('email ['+email+'] y/n: ', blank=True):
+            if askok('email ['+email+']: ', blank=True):
                 pass
             else:
                 raise Exception
@@ -61,7 +141,7 @@ class Connection:
         password = ''
         try:
             password = settings['password']
-            if askok('password ['+('*'*len(password))+'] y/n: ', blank=True):
+            if askok('password ['+('*'*len(password))+']: ', blank=True):
                 pass
             else:
                 raise Exception
@@ -75,4 +155,8 @@ class Connection:
         }
     
     def load_settings(self, settings):
-        pass
+        try:
+            self.email = settings['email']
+            self.password = settings['password']
+        except:
+            print('error (load_settings): cannot parse settings dictionary')

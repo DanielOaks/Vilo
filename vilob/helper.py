@@ -42,3 +42,9 @@ def askok(prompt, blank=''):
                 return True
             elif blank == False:
                 return False
+
+def downloadfile(url, localfile=None):
+    if localfile:
+        local_name = localfile
+    else:
+        local_name = ufl.split('/')[-1]

@@ -9,5 +9,6 @@ from vilob.nico import Connection
 connection = Connection()
 
 settings_path = 'settings.json'
-settings = connection.parse_config_file(settings_path)
+settings = connection.parse_config_file(settings_path, update_settings=True)
 
+connection.download_video('sm14481824')
