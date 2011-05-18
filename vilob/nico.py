@@ -82,7 +82,7 @@ class Connection:
                     video_type = 'mp4'
                 else:
                     video_type = 'flv'
-                print('video [%s] downloading' % video)
+                print(' video [%s] downloading' % video)
                 if True:
                     full_open = urllib.request.urlopen(download_results['url'])
                     local_file = open(video+'.'+video_type, 'wb')
@@ -100,22 +100,25 @@ class Connection:
                             local_file.write(block)
                             block_num += 1
                             printprogressbar(int((read/size)*100))
-                            print('    block', block_num-1, 'of', int(size/block_size), 'with', str(int(block_size/8))+'b blocks', end='')
+                            print('    block', block_num-1, 'of', int(size/block_size), end='')
+                            #print(' with', str(int(block_size/8))+'b blocks', end='')
                     finally:
                         print('')
                         local_file.close()
                         full_open.close()
                 else:
                     filename, headers = urllib.request.urlretrieve(download_results['url'], video+'__.'+video_type)
-                print('video [%s] downloaded' % video)
+                print(' video [%s] downloaded' % video)
+                return True
             except urllib.error.HTTPError as e:
-                print('HTTP Error', e.code, ':', download_results['url'])
-                return
+                print(' HTTP Error', e.code, ':', download_results['url'])
+                return False
             except urllib.error.URLError as e:
-                print('URL Error:', e.code, ':', download_results['url'])
-                return
+                print(' URL Error:', e.code, ':', download_results['url'])
+                return False
         else:
-            print('video [%s] cound not be downloaded' % video)
+            print(' video [%s] could not be downloaded' % video)
+            return False
     
     
     def parse_config_file(self, settings_path, update_settings=False):
@@ -146,25 +149,27 @@ class Connection:
         email = ''
         try:
             email = settings['email']
-            if askok(' email ['+email+']: ', blank=True):
-                pass
-            else:
-                raise Exception
+            new_email = input(' email ['+email+']: ').strip()
+            if new_email != '':
+                email = new_email
         except:
-            email = input('  new email address: ')
+            new_email = ''
+            while new_email == '':
+                new_email = input(' email: ').strip()
+            email = new_email
         
         #>> password
         password = ''
         try:
             password = settings['password']
-            if askok(' password ['+('*'*len(password))+']: ', blank=True):
-                pass
-            else:
-                raise Exception
+            new_password = getpass(' password ['+('*'*len(password))+']: ').strip()
+            if new_password != '':
+                password = new_password
         except:
-            password = getpass('  new password: ')
-        
-        print('')
+            new_password = ''
+            while new_password == '':
+                new_password = getpass(' password: ').strip()
+            password = new_password
         
         #>> finished
         return {
@@ -176,5 +181,7 @@ class Connection:
         try:
             self.email = settings['email']
             self.password = settings['password']
+            
+            self.login(self.email, self.password)
         except:
             print('error (load_settings): cannot parse settings dictionary')
