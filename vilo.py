@@ -14,11 +14,11 @@ settings_path = 'settings.json'
 settings = connection.parse_config_file(settings_path, update_settings=True)
 
 while 1:
-    video = input('\nmedia code [sm...]: ').strip()
+    media_code = input('\nmedia code [sm...]: ').strip()
     
     contains_digits = False
     for digit in string.digits:
-        if digit in video:
+        if digit in media_code:
             contains_digits = True
             break
     
@@ -26,4 +26,8 @@ while 1:
         print('\nVilo Exited')
         break
     
-    downloaded = connection.download_video(video)
+    if 'sm' in media_code:
+        downloaded = connection.download_douga(media_code)
+    
+    elif 'im' in media_code:
+        downloaded = connection.download_seiga(media_code)

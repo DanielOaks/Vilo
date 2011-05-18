@@ -24,23 +24,23 @@ class Connection:
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cj))
         urllib.request.install_opener(self.opener)
     
-    def login(self, email, password, video=None):
-        login_url = 'https://secure.nicovideo.jp/secure/login?site=niconico'
+    def login(self, email, password, site=None):
+        login_url = 'https://secure.nicovideo.jp/secure/login'
+        if site:
+            login_url += '?site=' + site
         login_values = {
             'mail' : email,
             'password' : password,
         }
-        if video:
-            login_values['next_url'] = '/watch/' + str(video)
         login_params = urllib.parse.urlencode(login_values)
         login_params = login_params.encode('utf-8')
         login_request = urllib.request.Request(login_url, login_params)
         login_open = urllib.request.urlopen(login_request)
         login_open.close()
     
-    def download_video(self, video):
+    def download_douga(self, video):
         if len(self.cj) is 0:
-            self.login(self.email, self.password, video)
+            self.login(self.email, self.password, site='niconico')
         
         download_values = {
             #'ts' : str(time()).split('.')[0],
@@ -82,7 +82,7 @@ class Connection:
                     video_type = 'mp4'
                 else:
                     video_type = 'flv'
-                print(' video [%s] downloading' % video)
+                print(' video [%s] downloading as %s' % (video, video_type))
                 if True:
                     full_open = urllib.request.urlopen(download_results['url'])
                     local_file = open(video+'.'+video_type, 'wb')
@@ -119,6 +119,47 @@ class Connection:
         else:
             print(' video [%s] could not be downloaded' % video)
             return False
+    
+    def download_seiga(self, image):
+        if len(self.cj) is 0:
+            self.login(self.email, self.password, site='seiga')
+        
+        download_url = 'http://seiga.nicovideo.jp/image/source?id=' + image[2:]
+        download_open = urllib.request.urlopen(download_url)
+        
+        print(' image [%s] downloading' % image)
+        
+        try:
+            local_file = open(image+'.jpg', 'wb')
+            
+            try:
+                block_size = 1024*8
+                block_num = 0
+                read = 0
+                size = int(download_open.info()['Content-Length'])
+                while 1:
+                    block = download_open.read(block_size)
+                    if not block:
+                        break
+                    read += len(block)
+                    local_file.write(block)
+                    block_num += 1
+                    printprogressbar(int((read/size)*100))
+                    print('    block', block_num-1, 'of', int(size/block_size), end='')
+                    #print(' with', str(int(block_size/8))+'b blocks', end='')
+            finally:
+                print('')
+                local_file.close()
+                download_open.close()
+            print(' image [%s] downloaded' % image)
+            return True
+        except urllib.error.HTTPError as e:
+            print(' HTTP Error', e.code, ':', download_url)
+            return False
+        except urllib.error.URLError as e:
+            print(' URL Error:', e.code, ':', download_url)
+            return False
+        
     
     
     def parse_config_file(self, settings_path, update_settings=False):
