@@ -44,4 +44,4 @@ def askok(prompt, blank=''):
                 return False
 
 def printprogressbar(progress, progressboxes=10):
-    print('\r [', '#'*int((progress/100)*progressboxes) + ' '*(progressboxes-int((progress/100)*progressboxes)), '] %d%%' % progress, end='')
+    print('\r [', '#'*int((progress/100)*progressboxes) + ' '*(progressboxes-int((progress/100)*progressboxes)), ']  %d%%' % progress+(' '*(len('100')-len(str(progress)))), end='')

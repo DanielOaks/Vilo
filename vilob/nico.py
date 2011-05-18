@@ -82,7 +82,7 @@ class Connection:
                     video_type = 'mp4'
                 else:
                     video_type = 'flv'
-                print('downloading video [%s]' % video)
+                print('video [%s] downloading' % video)
                 if True:
                     full_open = urllib.request.urlopen(download_results['url'])
                     local_file = open(video+'.'+video_type, 'wb')
@@ -99,7 +99,8 @@ class Connection:
                             read += len(block)
                             local_file.write(block)
                             block_num += 1
-                            printprogressbar((read/size)*100)
+                            printprogressbar(int((read/size)*100))
+                            print('    block', block_num-1, 'of', int(size/block_size), 'with', str(int(block_size/8))+'b blocks', end='')
                     finally:
                         print('')
                         local_file.close()
@@ -145,23 +146,25 @@ class Connection:
         email = ''
         try:
             email = settings['email']
-            if askok('email ['+email+']: ', blank=True):
+            if askok(' email ['+email+']: ', blank=True):
                 pass
             else:
                 raise Exception
         except:
-            email = input('new email address: ')
+            email = input('  new email address: ')
         
         #>> password
         password = ''
         try:
             password = settings['password']
-            if askok('password ['+('*'*len(password))+']: ', blank=True):
+            if askok(' password ['+('*'*len(password))+']: ', blank=True):
                 pass
             else:
                 raise Exception
         except:
-            password = getpass('new password: ')
+            password = getpass('  new password: ')
+        
+        print('')
         
         #>> finished
         return {
