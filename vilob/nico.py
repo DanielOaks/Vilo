@@ -10,7 +10,7 @@ import urllib.request, urllib.parse
 import chardet
 import os
 from time import time
-from .helper import askok, printprogressbar, bytestostr
+from .helper import askok, printprogressmeter, bytestostr
 from getpass import getpass
 
 class Connection:
@@ -51,10 +51,18 @@ class Connection:
         outcome = False
         if 'sm' in media:
             outcome = self.download_douga(media)
-            self.cj.clear('.nicovideo.jp', '/', 'nicohistory')
+            print('')
+            try:
+                self.cj.clear('.nicovideo.jp', '/', 'nicohistory')
+            except:
+                pass
         elif 'im' in media:
             outcome = self.download_seiga(media)
-            self.cj.clear('seiga.nicovideo.jp')
+            print('')
+            try:
+                self.cj.clear('seiga.nicovideo.jp')
+            except:
+                pass
         return outcome
     
     def download_douga(self, video):
@@ -101,7 +109,7 @@ class Connection:
                     video_type = 'mp4'
                 else:
                     video_type = 'flv'
-                print(' video [%s] downloading as %s' % (video, video_type))
+                print('video [%s] downloading as %s' % (video, video_type))
                 if True:
                     full_open = urllib.request.urlopen(download_results['url'])
                     local_file = open('media/'+video+'.'+video_type, 'wb')
@@ -118,26 +126,29 @@ class Connection:
                             read += len(block)
                             local_file.write(block)
                             block_num += 1
-                            printprogressbar(int((read/size)*100))
-                            print('   ', bytestostr(read), 'downloaded of', bytestostr(size), end='')
-                            #print('    block', block_num-1, 'of', int(size/block_size), end='')
-                            #print(' with', str(int(block_size/8))+'b blocks', end='')
+                            
+                            current_percent = int((read / size) * 100)
+                            printprogressmeter(current_percent, l_indent=2, r_indent=6)
+                            percent = ' '
+                            percent += ' ' * int(4 - len(str(current_percent) + '%'))
+                            percent += str(current_percent) + '%'
+                            print(percent, end='')
                     finally:
                         print('')
                         local_file.close()
                         full_open.close()
                 else:
                     filename, headers = urllib.request.urlretrieve(download_results['url'], video+'__.'+video_type)
-                print(' video [%s] downloaded' % video)
+                print('video [%s] downloaded' % video)
                 return True
             except urllib.error.HTTPError as e:
-                print(' HTTP Error', e.code, ':', download_results['url'])
+                print('video [%s] could not be downloaded : %d' % (video, e.code))
                 return False
             except urllib.error.URLError as e:
-                print(' URL Error:', e.code, ':', download_results['url'])
+                print('video [%s] could not be downloaded : %d' % (video, e.code))
                 return False
         else:
-            print(' video [%s] could not be downloaded' % video)
+            print('video [%s] could not be downloaded : invalid video' % video)
             return False
     
     def download_seiga(self, image):
@@ -145,42 +156,44 @@ class Connection:
             self.login(self.email, self.password, site='seiga')
         
         download_url = 'http://seiga.nicovideo.jp/image/source?id=' + image[2:]
-        download_open = urllib.request.urlopen(download_url)
-        
-        print(' image [%s] downloading' % image)
         
         try:
-            local_file = open('media/'+image+'.jpg', 'wb')
-            
-            try:
-                block_size = 1024*8
-                block_num = 0
-                read = 0
-                size = int(download_open.info()['Content-Length'])
-                while 1:
-                    block = download_open.read(block_size)
-                    if not block:
-                        break
-                    read += len(block)
-                    local_file.write(block)
-                    block_num += 1
-                    printprogressbar(int((read/size)*100))
-                    print('   ', bytestostr(read), 'downloaded of', bytestostr(size), end='')
-                    #print('    block', block_num-1, 'of', int(size/block_size), end='')
-                    #print(' with', str(int(block_size/8))+'b blocks', end='')
-            finally:
-                print('')
-                local_file.close()
-                download_open.close()
-            print(' image [%s] downloaded' % image)
-            return True
+            download_open = urllib.request.urlopen(download_url)
         except urllib.error.HTTPError as e:
-            print(' HTTP Error', e.code, ':', download_url)
+            print('image [%s] could not be downloaded : %d' % (image, e.code))
             return False
         except urllib.error.URLError as e:
-            print(' URL Error:', e.code, ':', download_url)
+            print('image [%s] could not be downloaded : %d' % (image, e.code))
             return False
-    
+        
+        local_file = open('media/'+image+'.jpg', 'wb')
+        
+        print('image [%s] downloading' % image)
+        try:
+            block_size = 1024*8
+            block_num = 0
+            read = 0
+            size = int(download_open.info()['Content-Length'])
+            while 1:
+                block = download_open.read(block_size)
+                if not block:
+                    break
+                read += len(block)
+                local_file.write(block)
+                block_num += 1
+                
+                current_percent = int((read / size) * 100)
+                printprogressmeter(current_percent, l_indent=2, r_indent=6)
+                percent = ' '
+                percent += ' ' * int(4 - len(str(current_percent) + '%'))
+                percent += str(current_percent) + '%'
+                print(percent, end='')
+        finally:
+            print('')
+            local_file.close()
+            download_open.close()
+        print('image [%s] downloaded' % image)
+        return True
     
     def parse_config_file(self, settings_path, update_settings=False):
         #>> deal with config file

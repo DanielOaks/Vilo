@@ -5,6 +5,8 @@ Copyright 2011 Daniel Oakley <danneh@danneh.net>
 """
 
 import string
+import sys
+from vilob.helper import newinput
 from vilob.nico import Connection
 
 connection = Connection()
@@ -13,8 +15,10 @@ print('Vilo - NicoNico Downloader')
 settings_path = 'settings.json'
 settings = connection.parse_config_file(settings_path, update_settings=True)
 
+print('')
+
 while 1:
-    media_code = input('\nmedia code [sm...]: ').strip()
+    media_code = newinput('media code [sm...]: ', newline=False, clearline=True).strip()
     
     contains_digits = False
     for digit in string.digits:
@@ -23,7 +27,7 @@ while 1:
             break
     
     if contains_digits == False:
-        print('\nVilo Exited')
+        print('Vilo Exited')
         break
     
     connection.download_media(media_code)
