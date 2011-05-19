@@ -45,3 +45,25 @@ def askok(prompt, blank=''):
 
 def printprogressbar(progress, progressboxes=10):
     print('\r  [', '#'*int((progress/100)*progressboxes) + ' '*(progressboxes-int((progress/100)*progressboxes)), ']  %d%%' % progress+(' '*(len('100')-len(str(progress)))), end='')
+
+def bytestostr(bytes):
+    if bytes >= 1099511627776:
+        terabytes = int(bytes / 1099511627776)
+        output = str(terabytes) + 'T'
+    
+    elif bytes >= 1073741824:
+        gigabytes = int(bytes / 1073741824)
+        output = str(gigabytes) + 'G'
+    
+    elif bytes >= 1048576:
+        megabytes = int(bytes / 1048576)
+        output = str(megabytes) + 'M'
+    
+    elif bytes >= 1024:
+        kilobytes = int(bytes / 1024)
+        output = str(kilobytes) + 'K'
+    
+    else:
+        output = str(int(bytes)) + 'b'
+    
+    return output

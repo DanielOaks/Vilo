@@ -10,7 +10,7 @@ import urllib.request, urllib.parse
 import chardet
 import os
 from time import time
-from .helper import askok, printprogressbar
+from .helper import askok, printprogressbar, bytestostr
 from getpass import getpass
 
 class Connection:
@@ -51,8 +51,10 @@ class Connection:
         outcome = False
         if 'sm' in media:
             outcome = self.download_douga(media)
+            self.cj.clear('.nicovideo.jp', '/', 'nicohistory')
         elif 'im' in media:
             outcome = self.download_seiga(media)
+            self.cj.clear('seiga.nicovideo.jp')
         return outcome
     
     def download_douga(self, video):
@@ -117,7 +119,8 @@ class Connection:
                             local_file.write(block)
                             block_num += 1
                             printprogressbar(int((read/size)*100))
-                            print('    block', block_num-1, 'of', int(size/block_size), end='')
+                            print('   ', bytestostr(read), 'downloaded of', bytestostr(size), end='')
+                            #print('    block', block_num-1, 'of', int(size/block_size), end='')
                             #print(' with', str(int(block_size/8))+'b blocks', end='')
                     finally:
                         print('')
@@ -162,7 +165,8 @@ class Connection:
                     local_file.write(block)
                     block_num += 1
                     printprogressbar(int((read/size)*100))
-                    print('    block', block_num-1, 'of', int(size/block_size), end='')
+                    print('   ', bytestostr(read), 'downloaded of', bytestostr(size), end='')
+                    #print('    block', block_num-1, 'of', int(size/block_size), end='')
                     #print(' with', str(int(block_size/8))+'b blocks', end='')
             finally:
                 print('')
