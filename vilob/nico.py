@@ -7,7 +7,7 @@ Copyright 2011 Daniel Oakley <danneh@danneh.net>
 import json
 import http.cookiejar
 import urllib.request, urllib.parse
-import chardet
+#import chardet
 import os
 from time import time
 from .helper import askok, printprogressmeter, bytestostr
@@ -119,6 +119,7 @@ class Connection:
                         block_num = 0
                         read = 0
                         size = int(full_open.info()['Content-Length'])
+                        previous_percent = 0
                         while 1:
                             block = full_open.read(block_size)
                             if not block:
@@ -128,11 +129,14 @@ class Connection:
                             block_num += 1
                             
                             current_percent = int((read / size) * 100)
-                            printprogressmeter(current_percent, l_indent=2, r_indent=6)
-                            percent = ' '
-                            percent += ' ' * int(4 - len(str(current_percent) + '%'))
-                            percent += str(current_percent) + '%'
-                            print(percent, end='')
+                            #printprogressmeter(current_percent, l_indent=2, r_indent=6)
+                            #percent = ' '
+                            #percent += ' ' * int(4 - len(str(current_percent) + '%'))
+                            #percent += str(current_percent) + '%'
+                            #print(percent, end='')
+                            if current_percent != previous_percent:
+                                previous_percent = current_percent
+                                print(str(current_percent) + '%% Complete')
                     finally:
                         print('')
                         local_file.close()

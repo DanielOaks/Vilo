@@ -18,7 +18,8 @@ settings = connection.parse_config_file(settings_path, update_settings=True)
 print('')
 
 while 1:
-    media_code = newinput('media code [sm...]: ', newline=False, clearline=True).strip()
+    #media_code = newinput('media code [sm...]: ', newline=False, clearline=True).strip()
+    media_code = input('media code [sm...]: ').strip()
     
     contains_digits = False
     for digit in string.digits:
